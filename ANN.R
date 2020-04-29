@@ -1,9 +1,14 @@
+#Install the keras R package
+install.packages("keras")
+
+#Install the core Keras library + TensorFlow
 library(keras)
+install_keras()
 
 fashion_mnisit <- dataset_fashion_mnist()
 
 #Test train split
-#Asigno las im·genes y labels para las diferentes secciones de train y test
+#Asigno las im√°genes y labels para las diferentes secciones de train y test
 c(train_image, train_labels) %<-% fashion_mnisit$train
 c(test_image, test_labels) %<-% fashion_mnisit$test
 
@@ -11,14 +16,14 @@ c(test_image, test_labels) %<-% fashion_mnisit$test
 dim(train_image)
 str(train_image)
 
-#Poner una im·gen
-#Asigno la informaciÛn de la imagen 5 al objeto llabado fobject
+#Poner una imagen
+#Asigno la informaci√≥n de la imagen 5 al objeto llabado fobject
 
 fobject <- train_image[2,,]
-#Mostrar la informaciÛn como un raster image (imagen pixelada)
+#Mostrar la informaci√≥n como un raster image (imagen pixelada)
 plot(as.raster(fobject, max=255))
 
-#Creo la claseificaciÛn del set de im·genes
+#Creo la claseificaci√≥n del set de im√°genes
 class_name = c(
   'T-shit/Top',
   'Trouser',
@@ -35,21 +40,21 @@ class_name = c(
 class_name[train_labels[8]+1]
 
 
-#Normalizar la data cuando el dataset es heterogÈnea
+#Normalizar la data cuando el dataset es heterog√©nea
 #Cuando se tiene muchos tipos de datos en el dataset
 
 #[(x-mean)/Std.Dev]
 
-#Si no est· de esta forma, las im·genes est·n con pixeles de 0 a 255, entonces solo se divide por el n˙mero
+#Si no est√° de esta forma, las im√°genes est√°n con pixeles de 0 a 255, entonces solo se divide por el n√∫mero
 #de pixeles
 train_image <- train_image/255
 test_image <- test_image/255
 
-#Creando una divisiÛn de validaciÛn - necesaria para la afinaciÛn de hiperpar·metros
+#Creando una divisi√≥n de validaci√≥n - necesaria para la afinaci√≥n de hiperpar√°metros
 
 #Tomo los primeros 5000 valores
 val_indices <- 1:5000
-#Se guarda las primeras 5000 im·genes (tomado del val_indices)
+#Se guarda las primeras 5000 im√°genes (tomado del val_indices)
 val_images <- train_image[val_indices,,]
 #Guardo los otros 5000
 part_train_images <- train_image[-val_indices,,]
@@ -58,7 +63,7 @@ val_labels <- train_labels[val_indices]
 part_train_labels <- train_labels[-val_indices]
 
 
-#Definimos la estructura del modelo ## %>% es usado para pasar valores como argumento a una funciÛn
+#Definimos la estructura del modelo ## %>% es usado para pasar valores como argumento a una funci√≥n
 
 # Flattening
 # X X X
@@ -67,34 +72,34 @@ part_train_labels <- train_labels[-val_indices]
 
 model <- keras_model_sequential()
 model %>%
-  # Se aplana la imhagen a una sola dimensiÛn para el procesamiento de la imagen para analizarlas como input
+  # Se aplana la imagen a una sola dimensi√≥n para el procesamiento de la imagen para analizarlas como input
   #28x28 = 784 inputs
   layer_flatten(input_shape = c(28,28)) %>%
-  #AquÌ se define que 128 van a utilizar 128 neuronas para procesar los inputs con la activation function ReLU
+  #Aqu√≠ se define que se utilizar√°n 128 neuronas para procesar los inputs con la activation function ReLU
   layer_dense(units = 256, activation = "relu") %>%
-  #AquÌ se manda la info a las ˙ltimas 10 neuronas que arrojar·n la salida de las 10 posibles en el modelo
+  #Aqu√≠ se manda la info a las √∫ltimas 10 neuronas que arrojar√≥n la salida de las 10 posibles en el modelo
   layer_dense(units = 10, activation = "softmax")
 
 model %>% compile(
   #Stochastic gradient descent
   optimizer = 'sgd',
-  #DocumentaciÛn abajo del mÈtodo compile / Definir quÈ clase de clasificaciÛn queremos
+  #Documentaci√≥n abajo del m√©todo compile / Definir qu√© clase de clasificaci√≥n queremos
   loss = 'sparse_categorical_crossentropy',
   metrics = c('accuracy')
 )
 
 
-#sparce_categorical_crossentropy = M·s de dos clases de clasificaciÛn y cada salida solo pertenece a una clase
-#binary_crossentropy = Si solo tenemos dos clases de clasificaciÛn y los objetos pertenecen a uno de ellos
-#categorical_crossentropy = M·s de dos clases de clasificaciÛn y cada salida puede pertenecer a varias clases
+#sparce_categorical_crossentropy = M√°s de dos clases de clasificaci√≥n y cada salida solo pertenece a una clase
+#binary_crossentropy = Si solo tenemos dos clases de clasificaci√≥n y los objetos pertenecen a uno de ellos
+#categorical_crossentropy = M√°s de dos clases de clasificaci√≥n y cada salida puede pertenecer a varias clases
 
 #(A categorizar, outputs)
-#epochs = Esta es la cantidad de veces que todos nuestros datos de entrenamiento se incluir·n en el modelo.
-#batch_size = Este es el n˙mero de observaciones que se utilizar·n durante cada paso de backwart y forward
+#epochs = Esta es la cantidad de veces que todos nuestros datos de entrenamiento se incluir√°n en el modelo.
+#batch_size = Este es el n√∫mero de observaciones que se utilizar√°n durante cada paso de backwart y forward
 model %>% fit(part_train_images, part_train_labels, epochs = 30, batch_size=100, validation_data=list(val_images,val_labels))
 
 
-#Una forma r·pida de evaluar la accuracy y el loss
+#Una forma r√°pida de evaluar la accuracy y el loss
 score <- model %>% evaluate(test_image, test_labels)
 
 #De forma individual
@@ -103,43 +108,15 @@ cat('Test accuracy:', score$accuracy)
 
 #Predicciones en el set de prueba
 predictions <- model %>% predict(test_image)
-#PredicciÛn para la primera imagen(el resultado es la probabilidad de que pertenezca a cada una de las 10 clases)
+#Predicci√≥n para la primera imagen(el resultado es la probabilidad de que pertenezca a cada una de las 10 clases)
 predictions[1, ]
-#Ahora vemos cu·l clase se ajusta mejor a la imagen
+#Ahora vemos cu√°l clase se ajusta mejor a la imagen
 which.max(predictions[1, ])
-#Con los nombres asignados anteriormente a cada clase, saco a quÈ pertenece la imagen
+#Con los nombres asignados anteriormente a cada clase, saco a qu√© pertenece la imagen
 class_name[which.max(predictions[1, ])]
-#Mostramos quÈ estamos clasificando
+#Mostramos qu√© estamos clasificando
 plot(as.raster(test_image[1, , ], max=255))
 
-#Otra forma de hacer la predicciÛn, b·sicamente se usa predict_classes y arroja las clases que predice que son
+#Otra forma de hacer la predicci√≥n, b√°sicamente se usa predict_classes y arroja las clases que predice que son
 class_pred <- model %>% predict_classes(test_image)
 class_pred[1:2]
-
-
-
-
-
-#TambiÈn se puede usar el neuronalnet package
-
-install.packages("neuralnet")
-require(neuralnet)
-
-hours = c(20,10,30,20,50,30)
-mocktest = c(90,20,20,10,50,80)
-Passed = c(1,0,0,0,1,1)
-
-df=data.frame(hours,mocktest,Passed)
-
-nn=neuralnet(Passed~hours+mocktest,data=df, hidden=c(3,2),act.fct = "logistic", linear.output = FALSE)
-
-plot(nn)
-
-thours = c(20,20,30)
-tmocktest = c(80,30,20)
-test=data.frame(thours,tmocktest)
-Predict=compute(nn,test)
-Predict$net.result
-prob <- Predict$net.result
-pred <- ifelse(prob>0.5, 1, 0)
-pred
