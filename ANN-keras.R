@@ -17,13 +17,13 @@ dim(train_image)
 str(train_image)
 
 #Poner una imagen
-#Asigno la información de la imagen 5 al objeto llabado fobject
+#Asigno la información de la imagen 2 al objeto llabado fobject
 
 fobject <- train_image[2,,]
 #Mostrar la información como un raster image (imagen pixelada)
 plot(as.raster(fobject, max=255))
 
-#Creo la claseificación del set de imágenes
+#Creo la clasificación del set de imágenes
 class_name = c(
   'T-shit/Top',
   'Trouser',
