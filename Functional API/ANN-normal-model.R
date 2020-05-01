@@ -37,20 +37,26 @@ predictions <- inputs %>%
   layer_dense(units = 1)
 
 #Se crea y compila el modelo
-model <- keras_model(inputs = inputs, outputs = predictions)
-model %>% compile(
+n_model <- keras_model(inputs = inputs, outputs = predictions)
+n_model %>% compile(
   optimizer = "rmsprop",
   #Significa que la matriz no es necesaria
   loss = "mse",
   metrics = list("mean_absolute_error")
 )
 
-model %>% fit(train_data, train_labels, epochs = 30, batch_size = 100)
+n_model %>% fit(train_data, train_labels, epochs = 30, batch_size = 100)
+
+#Guardamos el modelo en un archivo
+n_model %>% save_model_hdf5("models/normal_model.h5")
+
+#Probamos el modelo guardado
+new_n_model <- load_model_hdf5("models/normal_model.h5")
 
 # Test de rendimiento
 
 #Se evalúa el modelo
-score <- model %>% evaluate(test_data, test_labels)
+score <- new_n_model %>% evaluate(test_data, test_labels)
 #Devolver el loss resultante del modelo
 cat('Test loss:', score$loss, "\n")
 #Error del modelo

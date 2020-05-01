@@ -50,11 +50,112 @@ summary(model_func)
 
 model_func %>% fit(train_data, train_labels, epochs = 30, batch_size = 100)
 
+#Guardamos el modelo en un archivo
+model_func %>% save_model_hdf5("models/funct_model.h5")
+
+#Probamos el modelo guardado
+new_model_func <- load_model_hdf5("models/funct_model.h5")
+
 # Test de rendimiento
 
 #Se evalúa el modelo
-score_func <- model_func %>% evaluate(test_data, test_labels)
+score_func <- new_model_func %>% evaluate(test_data, test_labels)
 #Devolver el loss resultante del modelo
 cat('Test loss:', score_func$loss, "\n")
 #Error del modelo
 cat('Test absolute error:', score_func$mean_absolute_error, "\n")
+
+
+
+
+
+
+###Uso de callbacks para guardar story points de los epochs
+
+#Se crea una nueva carpeta llamada "checkpoints"
+checkpoint_dir <- "checkpoints"
+dir.create(checkpoint_dir, showWarnings = FALSE)
+#Guarda todos los epochs
+filepath <- file.path(checkpoint_dir, "Epoch-{epoch:02d}.hdf5")
+
+# Create checkpoint callback
+cp_callback <- callback_model_checkpoint(filepath = filepath)
+
+#Limpio todo para mejor rendimiento
+rm(model_func)
+k_clear_session()
+
+#Se vuelve a definir el modelo
+
+model_callback <- keras_model(inputs = input_func, outputs = main_output)
+model_callback %>% compile(
+  optimizer = 'rmsprop',
+  loss = 'mse',
+  metrics = list("mean_absolute_error")
+  )
+
+#Aquí el fit no va a ser igual porque por cada epoch se va a generar un callback
+model_callback %>% fit(train_data, train_labels, epochs = 30, callbacks = list(cp_callback))
+
+list.files(checkpoint_dir)
+
+#Si queremos correr algún epoch en particular
+
+tenth_model <- load_model_hdf5(file.path(checkpoint_dir, "Epoch-11.hdf5"))
+
+summary(tenth_model)
+
+
+###Guardar solo el mejor modelo
+
+#Se guarda el mejor modelo con respecto al validation loss
+callbacks_best <- callback_model_checkpoint(filepath = "models/best_functional_model.h5", monitor = "val_loss", 
+                                            save_best_only = TRUE)
+
+#Libero memoria
+rm(model_callback)
+k_clear_session()
+
+#Configuro el modelo para solo sacar el mejor de los epoch
+
+model_cb_best <- keras_model(inputs = input_func, outputs = main_output)
+model_cb_best %>% compile(optimizer = 'rmsprop',loss = 'mse',
+                          metrics = list("mean_absolute_error"))
+
+model_cb_best %>% fit(train_data, train_labels, epochs = 30, 
+                      validation_data=list(test_data,test_labels),
+                      callbacks = list(callbacks_best))
+
+#Cargamos el mejor modelo
+best_model <- load_model_hdf5("models/best_functional_model.h5")
+
+
+
+
+
+
+
+### Feature: si queremos detener el modelo cuando encuentre el mejor modelo
+
+#Aquí se selecciona que se quiere detener en el mejor modelo respecto al validation loss con una paciencia de 3 epochs 
+
+callbacks_list <- list(
+  callback_early_stopping(monitor = "val_loss",patience = 3),
+  callback_model_checkpoint(filepath = "models/best_model_early_stopping.h5", monitor = "val_loss", save_best_only = TRUE)
+)
+
+rm(model_cb_best)
+k_clear_session()
+
+model_cb_early <- keras_model(inputs = inputs_func, outputs = main_output)
+model_cb_early %>% compile(optimizer = 'rmsprop',loss = 'mse',
+                           metrics = list("mean_absolute_error"))
+
+#Esto se hace porque por ejemplo, en este modelo se hacen 100 epochs y son bastantes
+model_cb_early %>% fit(train_data, train_labels, epochs = 100, 
+                       validation_data=list(test_data,test_labels),
+                       callbacks = callbacks_list)
+
+best_model_early_stopping <- load_model_hdf5("models/best_model_early_stopping.h5")
+
+k_clear_session()

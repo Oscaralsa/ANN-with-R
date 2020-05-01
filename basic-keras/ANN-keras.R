@@ -12,7 +12,7 @@ fashion_mnisit <- dataset_fashion_mnist()
 c(train_image, train_labels) %<-% fashion_mnisit$train
 c(test_image, test_labels) %<-% fashion_mnisit$test
 
-##Explorar el dato
+##Consoltamos el dato
 dim(train_image)
 str(train_image)
 
@@ -70,8 +70,8 @@ part_train_labels <- train_labels[-val_indices]
 # Y Y Y  -> X X X Y Y Y Z Z Z
 # Z Z Z
 
-model <- keras_model_sequential()
-model %>%
+model_k <- keras_model_sequential()
+model_k %>%
   # Se aplana la imagen a una sola dimensión para el procesamiento de la imagen para analizarlas como input
   #28x28 = 784 inputs
   layer_flatten(input_shape = c(28,28)) %>%
@@ -80,7 +80,7 @@ model %>%
   #Aquí se manda la info a las últimas 10 neuronas que arrojarón la salida de las 10 posibles en el modelo
   layer_dense(units = 10, activation = "softmax")
 
-model %>% compile(
+model_k %>% compile(
   #Stochastic gradient descent
   optimizer = 'sgd',
   #Documentación abajo del método compile / Definir qué clase de clasificación queremos
@@ -96,18 +96,23 @@ model %>% compile(
 #(A categorizar, outputs)
 #epochs = Esta es la cantidad de veces que todos nuestros datos de entrenamiento se incluirán en el modelo.
 #batch_size = Este es el número de observaciones que se utilizarán durante cada paso de backwart y forward
-model %>% fit(part_train_images, part_train_labels, epochs = 30, batch_size=100, validation_data=list(val_images,val_labels))
+model_k %>% fit(part_train_images, part_train_labels, epochs = 30, batch_size=100, validation_data=list(val_images,val_labels))
 
+#Guardamos el modelo en un archivo
+model_k %>% save_model_hdf5("models/model_k.h5")
+
+#Probamos el modelo guardado
+new_model_k <- load_model_hdf5("models/model_k.h5")
 
 #Una forma rápida de evaluar la accuracy y el loss
-score <- model %>% evaluate(test_image, test_labels)
+score <- new_model_k %>% evaluate(test_image, test_labels)
 
 #De forma individual
 cat('Test loss:', score$loss)
 cat('Test accuracy:', score$accuracy)
 
 #Predicciones en el set de prueba
-predictions <- model %>% predict(test_image)
+predictions <- new_model_k %>% predict(test_image)
 #Predicción para la primera imagen(el resultado es la probabilidad de que pertenezca a cada una de las 10 clases)
 predictions[1, ]
 #Ahora vemos cuál clase se ajusta mejor a la imagen
